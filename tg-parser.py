@@ -24,6 +24,7 @@ if not os.path.exists('config-tg.txt'):
     with open('config-tg.txt', 'w'): pass
 
 thrd_pars = int(input('Threads for parsing: '))
+pars_dp = int(input('\nParsing depth (1dp = 20 last tg posts): '))
 print()
 
 start_time = datetime.now()
@@ -47,6 +48,7 @@ with open("config-tg.txt", "r", encoding="utf-8") as config_all_file:
     config_all=config_all_file.readlines()
 
 pattern_telegram_user = r'(?:@)(\w{5,})|(?:%40)(\w{5,})'
+pattern_datbef = re.compile(r'(?:data-before=")(\d*)')
 
 for config in config_all:
     if config.startswith('vmess://'):
@@ -86,30 +88,37 @@ with open('telegram channels.json', 'w', encoding="utf-8") as telegram_channels_
 
 print(f'\nSearch for new names is over - {str(datetime.now() - start_time).split(".")[0]}')
 
-print(f'\nStart Parsing...')
+print(f'\nStart Parsing...\n')
 
 def process(i_url):
     sem_pars.acquire()
     html_pages = list()
-    while True:
-        try:
-            response = requests.get(f'https://t.me/s/{i_url}')
-        except:
-            time.sleep(random.randint(10,30))
-            pass
-        else:
-            print(f'{tg_name_json.index(i_url)+1} of {walen} - {i_url}')
-            html_pages.append(response.text)
-            for page in html_pages:
-                soup = BeautifulSoup(page, 'html.parser')
-                code_tags = soup.find_all(class_='tgme_widget_message_text')
-                for code_tag in code_tags:
-                    code_content2 = str(code_tag).split('<br/>')
-                    for code_content in code_content2:
-                        if "vless://" in code_content or "ss://" in code_content or "vmess://" in code_content or "trojan://" in code_content or "tuic://" in code_content or "hysteria://" in code_content or "hy2://" in code_content or "hysteria2://" in code_content or "juicity://" in code_content or "nekoray://" in code_content or "socks4://" in code_content or "socks5://" in code_content or "socks://" in code_content or "naive+" in code_content:
-                            codes.append(re.sub(htmltag_pattern, '', code_content))
-                            new_tg_name_json.append(i_url)
+    cur_url = i_url
+    for itter in range(1, pars_dp+1):
+        while True:
+            try:
+                response = requests.get(f'https://t.me/s/{cur_url}')
+            except:
+                time.sleep(random.randint(5,25))
+                pass
+            else:
+                if itter == pars_dp:
+                    print(f'{tg_name_json.index(i_url)+1} of {walen} - {i_url}')
+                html_pages.append(response.text)
+                last_datbef = re.findall(pattern_datbef, response.text)
+                break
+        if not last_datbef:
             break
+        cur_url = f'{i_url}?before={last_datbef[0]}'            
+    for page in html_pages:
+        soup = BeautifulSoup(page, 'html.parser')
+        code_tags = soup.find_all(class_='tgme_widget_message_text')
+        for code_tag in code_tags:
+            code_content2 = str(code_tag).split('<br/>')
+            for code_content in code_content2:
+                if "vless://" in code_content or "ss://" in code_content or "vmess://" in code_content or "trojan://" in code_content or "tuic://" in code_content or "hysteria://" in code_content or "hy2://" in code_content or "hysteria2://" in code_content or "juicity://" in code_content or "nekoray://" in code_content or "socks4://" in code_content or "socks5://" in code_content or "socks://" in code_content or "naive+" in code_content:
+                    codes.append(re.sub(htmltag_pattern, '', code_content))
+                    new_tg_name_json.append(i_url)
     sem_pars.release()
 
 htmltag_pattern = re.compile(r'<.*?>')
