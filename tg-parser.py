@@ -23,20 +23,35 @@ os.system('cls' if os.name == 'nt' else 'clear')
 if not os.path.exists('config-tg.txt'):
     with open('config-tg.txt', 'w'): pass
 
-thrd_pars = int(input('Threads for parsing: '))
-pars_dp = int(input('\nParsing depth (1dp = 20 last tg posts): '))
-print()
-
-start_time = datetime.now()
-
-sem_pars = threading.Semaphore(thrd_pars)
-
 def json_load(path):
     with open(path, 'r', encoding="utf-8") as file:
         list_content = json.load(file)
     return list_content
 
 tg_name_json = json_load('telegram channels.json')
+inv_tg_name_json = json_load('invalid telegram channels.json')
+
+inv_tg_name_json[:] = [x for x in inv_tg_name_json if len(x) >= 5]
+inv_tg_name_json = list(set(inv_tg_name_json)-set(tg_name_json))
+
+thrd_pars = int(input('\nThreads for parsing: '))
+pars_dp = int(input('\nParsing depth (1dp = 20 last tg posts): '))
+
+print(f'\nTotal channel names in telegram channels.json         - {len(tg_name_json)}')
+print(f'Total channel names in invalid telegram channels.json - {len(inv_tg_name_json)}')
+
+while (use_inv_tc := input('\nTry looking for proxy configs from "invalid telegram channels.json" too? (Enter y/n): ').lower()) not in {"y", "n"}: pass
+print()
+
+start_time = datetime.now()
+
+if use_inv_tc == 'y':
+    tg_name_json.extend(inv_tg_name_json)
+    inv_tg_name_json.clear()
+    tg_name_json = list(set(tg_name_json))
+    tg_name_json = sorted(tg_name_json)
+
+sem_pars = threading.Semaphore(thrd_pars)
 
 config_all = list()
 tg_name = list()
@@ -45,20 +60,20 @@ new_tg_name_json = list()
 print(f'Try get new tg channels name from proxy configs in config-tg.txt...')
 
 with open("config-tg.txt", "r", encoding="utf-8") as config_all_file:
-    config_all=config_all_file.readlines()
+    config_all = config_all_file.readlines()
 
-pattern_telegram_user = r'(?:@)(\w{5,})|(?:%40)(\w{5,})'
+pattern_telegram_user = r'(?:@)(\w{5,})|(?:%40)(\w{5,})|(?:me\/)(\w{5,})'
 pattern_datbef = re.compile(r'(?:data-before=")(\d*)')
 
 for config in config_all:
     if config.startswith('vmess://'):
         try:
-            config=base64.b64decode(config[8:]).decode("utf-8")
+            config = base64.b64decode(config[8:]).decode("utf-8")
         except:
             pass
     if config.startswith('ssr://'):
         try:
-            config=base64.b64decode(config[6:]).decode("utf-8")
+            config = base64.b64decode(config[6:]).decode("utf-8")
         except:
             pass
     matches_usersname = re.findall(pattern_telegram_user, config, re.IGNORECASE)
@@ -68,19 +83,21 @@ for config in config_all:
         pass
     
     for index, element in enumerate(matches_usersname):
-        if element[0]!='':
+        if element[0] != '':
             tg_name.append(element[0].lower().encode('ascii', 'ignore').decode())
-        if element[1]!='':
-            tg_name.append(element[1].lower().encode('ascii', 'ignore').decode()) 
+        if element[1] != '':
+            tg_name.append(element[1].lower().encode('ascii', 'ignore').decode())
+        if element[2] != '':
+            tg_name.append(element[2].lower().encode('ascii', 'ignore').decode())             
 
 tg_name[:] = [x for x in tg_name if len(x) >= 5]
 tg_name_json[:] = [x for x in tg_name_json if len(x) >= 5]    
-tg_name=list(set(tg_name))
+tg_name = list(set(tg_name))
 print(f'\nFound tg channel names - {len(tg_name)}')
 print(f'Total old names        - {len(tg_name_json)}')
 tg_name_json.extend(tg_name)
-tg_name_json=list(set(tg_name_json))
-tg_name_json=sorted(tg_name_json)
+tg_name_json = list(set(tg_name_json))
+tg_name_json = sorted(tg_name_json)
 print(f'In the end, new names  - {len(tg_name_json)}')
 
 with open('telegram channels.json', 'w', encoding="utf-8") as telegram_channels_file:
@@ -94,6 +111,7 @@ def process(i_url):
     sem_pars.acquire()
     html_pages = list()
     cur_url = i_url
+    god_tg_name = False
     for itter in range(1, pars_dp+1):
         while True:
             try:
@@ -109,7 +127,7 @@ def process(i_url):
                 break
         if not last_datbef:
             break
-        cur_url = f'{i_url}?before={last_datbef[0]}'            
+        cur_url = f'{i_url}?before={last_datbef[0]}'
     for page in html_pages:
         soup = BeautifulSoup(page, 'html.parser')
         code_tags = soup.find_all(class_='tgme_widget_message_text')
@@ -119,6 +137,9 @@ def process(i_url):
                 if "vless://" in code_content or "ss://" in code_content or "vmess://" in code_content or "trojan://" in code_content or "tuic://" in code_content or "hysteria://" in code_content or "hy2://" in code_content or "hysteria2://" in code_content or "juicity://" in code_content or "nekoray://" in code_content or "socks4://" in code_content or "socks5://" in code_content or "socks://" in code_content or "naive+" in code_content:
                     codes.append(re.sub(htmltag_pattern, '', code_content))
                     new_tg_name_json.append(i_url)
+                    god_tg_name = True                    
+    if not god_tg_name:
+        inv_tg_name_json.append(i_url)
     sem_pars.release()
 
 htmltag_pattern = re.compile(r'<.*?>')
@@ -141,7 +162,17 @@ codes = list(set(codes))
 processed_codes = list()
 
 for part in codes:
+    part = requests.utils.unquote(requests.utils.unquote(part))
     part = re.sub('amp;', '', part)
+    part = re.sub('fp=firefox', 'fp=chrome', part)
+    part = re.sub('fp=safari', 'fp=chrome', part)
+    part = re.sub('fp=edge', 'fp=chrome', part)
+    part = re.sub('fp=360', 'fp=chrome', part)
+    part = re.sub('fp=qq', 'fp=chrome', part)
+    part = re.sub('fp=ios', 'fp=chrome', part)
+    part = re.sub('fp=android', 'fp=chrome', part)
+    part = re.sub('fp=randomized', 'fp=chrome', part)
+    part = re.sub('fp=random', 'fp=chrome', part)
     if "vmess://" in part:
         part = f'vmess://{part.split("vmess://")[1]}'
         processed_codes.append(part)
@@ -222,10 +253,16 @@ new_tg_name_json = sorted(new_tg_name_json)
 
 print(f'\nRemaining tg channels after deletion - {len(new_tg_name_json)}')
 
-print(f'\nSave new telegram channels.json and config-tg.txt...')
+inv_tg_name_json = list(set(inv_tg_name_json))
+inv_tg_name_json = sorted(inv_tg_name_json)
+
+print(f'\nSave new telegram channels.json, invalid telegram channels.json and config-tg.txt...')
 
 with open('telegram channels.json', 'w', encoding="utf-8") as telegram_channels_file:
     json.dump(new_tg_name_json, telegram_channels_file, indent = 4)
+
+with open('invalid telegram channels.json', 'w', encoding="utf-8") as inv_telegram_channels_file:
+    json.dump(inv_tg_name_json, inv_telegram_channels_file, indent = 4)
 
 with open("config-tg.txt", "w", encoding="utf-8") as file:
     for code in processed_codes:
