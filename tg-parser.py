@@ -62,7 +62,7 @@ print(f'Try get new tg channels name from proxy configs in config-tg.txt...')
 with open("config-tg.txt", "r", encoding="utf-8") as config_all_file:
     config_all = config_all_file.readlines()
 
-pattern_telegram_user = r'(?:@)(\w{5,})|(?:%40)(\w{5,})|(?:me\/)(\w{5,})'
+pattern_telegram_user = r'(?:@)(\w{5,})|(?:%40)(\w{5,})|(?:t\.me\/)(\w{5,})'
 pattern_datbef = re.compile(r'(?:data-before=")(\d*)')
 
 for config in config_all:
