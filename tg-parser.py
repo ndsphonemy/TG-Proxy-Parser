@@ -28,6 +28,14 @@ def json_load(path):
         list_content = json.load(file)
     return list_content
 
+def substring_del(string_list):
+    string_list.sort(key=lambda s: len(s), reverse=True)
+    out = []
+    for s in string_list:
+        if not any([s in o for o in out]):
+            out.append(s)
+    return out
+
 tg_name_json = json_load('telegram channels.json')
 inv_tg_name_json = json_load('invalid telegram channels.json')
 
@@ -167,6 +175,7 @@ for part in codes:
     part = re.sub('%0D', '', part)
     part = requests.utils.unquote(requests.utils.unquote(part)).strip()
     part = re.sub('amp;', '', part)
+    part = re.sub('�', '', part)
     part = re.sub('fp=firefox', 'fp=chrome', part)
     part = re.sub('fp=safari', 'fp=chrome', part)
     part = re.sub('fp=edge', 'fp=chrome', part)
@@ -254,9 +263,18 @@ for x in processed_codes:
     if x[-1:] == '…':
         x=x[:-1]
     if x[-1:] == '»':
+        x=x[:-1]
+    if x[-2:-1] == '%':
+        x=x[:-2]
+    if x[-1:] == '%':
+        x=x[:-1]
+    if x[-1:] == '`':
         x=x[:-1]        
     new_processed_codes.append(x.strip())
-processed_codes = list(set(new_processed_codes))    
+processed_codes = list(set(new_processed_codes))
+
+#processed_codes = substring_del(processed_codes)
+#processed_codes = list(set(processed_codes))
 processed_codes = sorted(processed_codes)
 
 print(f'\nDelete tg channels that not contains proxy configs...')
