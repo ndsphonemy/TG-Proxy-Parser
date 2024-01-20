@@ -162,7 +162,10 @@ codes = list(set(codes))
 processed_codes = list()
 
 for part in codes:
-    part = requests.utils.unquote(requests.utils.unquote(part))
+    part = re.sub('%0A', '', part)
+    part = re.sub('%250A', '', part)
+    part = re.sub('%0D', '', part)
+    part = requests.utils.unquote(requests.utils.unquote(part)).strip()
     part = re.sub('amp;', '', part)
     part = re.sub('fp=firefox', 'fp=chrome', part)
     part = re.sub('fp=safari', 'fp=chrome', part)
@@ -175,75 +178,85 @@ for part in codes:
     part = re.sub('fp=random', 'fp=chrome', part)
     if "vmess://" in part:
         part = f'vmess://{part.split("vmess://")[1]}'
-        processed_codes.append(part)
+        processed_codes.append(part.strip())
         continue
     elif "vless://" in part:
         part = f'vless://{part.split("vless://")[1]}'
         if "@" in part and ":" in part[8:]:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "ss://" in part:
         part = f'ss://{part.split("ss://")[1]}'
-        processed_codes.append(part)
+        processed_codes.append(part.strip())
         continue
     elif "trojan://" in part:
         part = f'trojan://{part.split("trojan://")[1]}'
         if "@" in part and ":" in part[9:]:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "tuic://" in part:
         part = f'tuic://{part.split("tuic://")[1]}'
         if ":" in part[7:] and "@" in part:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "hysteria://" in part:
         part = f'hysteria://{part.split("hysteria://")[1]}'
         if ":" in part[11:] and "=" in part:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "hysteria2://" in part:
         part = f'hysteria2://{part.split("hysteria2://")[1]}'
         if "@" in part and ":" in part[12:]:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "hy2://" in part:
         part = f'hy2://{part.split("hy2://")[1]}'
         if "@" in part and ":" in part[6:]:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "juicity://" in part:
         part = f'juicity://{part.split("juicity://")[1]}'
-        processed_codes.append(part)
+        processed_codes.append(part.strip())
         continue
     elif "nekoray://" in part:
         part = f'nekoray://{part.split("nekoray://")[1]}'
-        processed_codes.append(part)
+        processed_codes.append(part.strip())
         continue
     elif "socks4://" in part:
         part = f'socks4://{part.split("socks4://")[1]}'
         if ":" in part[9:]:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "socks5://" in part:
         part = f'socks5://{part.split("socks5://")[1]}'
         if ":" in part[9:]:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "socks://" in part:
         part = f'socks://{part.split("socks://")[1]}'
         if ":" in part[8:]:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
     elif "naive+" in part:
         part = f'naive+{part.split("naive+")[1]}'
         if ":" in part[13:] and "@" in part:
-            processed_codes.append(part)
+            processed_codes.append(part.strip())
         continue
 
 print(f'\nTrying to delete corrupted configurations...') 
 
 processed_codes = list(set(processed_codes))
 processed_codes = [x for x in processed_codes if (len(x)>13) and (("…" in x and "#" in x) or ("…" not in x))]
+new_processed_codes = list()
+for x in processed_codes:
+    if x[-2:] == '…»':
+        x=x[:-2]
+    if x[-1:] == '…':
+        x=x[:-1]
+    if x[-1:] == '»':
+        x=x[:-1]        
+    new_processed_codes.append(x.strip())
+processed_codes = list(set(new_processed_codes))    
 processed_codes = sorted(processed_codes)
 
 print(f'\nDelete tg channels that not contains proxy configs...')
