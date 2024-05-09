@@ -29,11 +29,19 @@ def json_load(path):
     return list_content
 
 def substring_del(string_list):
-    string_list.sort(key=lambda s: len(s), reverse=True)
-    out = []
-    for s in string_list:
-        if not any([s in o for o in out]):
-            out.append(s)
+    list1 = list(string_list)
+    list2 = list(string_list)
+    list1.sort(key=lambda s: len(s), reverse=False)
+    list2.sort(key=lambda s: len(s), reverse=True)
+    out = list()
+    for s1 in list1:
+        for s2 in list2:
+            if s1 in s2 and len(s1) < len(s2):
+                out.append(s1)
+                break
+            if len(s1) >= len(s2):
+                break
+    out = list(set(string_list)-set(out))
     return out
 
 tg_name_json = json_load('telegram channels.json')
@@ -70,7 +78,7 @@ print(f'Try get new tg channels name from proxy configs in config-tg.txt...')
 with open("config-tg.txt", "r", encoding="utf-8") as config_all_file:
     config_all = config_all_file.readlines()
 
-pattern_telegram_user = r'(?:@)(\w{5,})|(?:%40)(\w{5,})|(?:t\.me\/)(\w{5,})'
+pattern_telegram_user = r'(?:@)(\w{5,})|(?:%40)(\w{5,})|(?:t\.me\/)(\w{5,})|(?:t\.me%2F)(\w{5,})|(?:t\.me-)(\w{5,})'
 pattern_datbef = re.compile(r'(?:data-before=")(\d*)')
 
 for config in config_all:
@@ -97,6 +105,10 @@ for config in config_all:
             tg_name.append(element[1].lower().encode('ascii', 'ignore').decode())
         if element[2] != '':
             tg_name.append(element[2].lower().encode('ascii', 'ignore').decode())             
+        if element[3] != '':
+            tg_name.append(element[3].lower().encode('ascii', 'ignore').decode()) 
+        if element[4] != '':
+            tg_name.append(element[4].lower().encode('ascii', 'ignore').decode())
 
 tg_name[:] = [x for x in tg_name if len(x) >= 5]
 tg_name_json[:] = [x for x in tg_name_json if len(x) >= 5]    
@@ -117,7 +129,7 @@ print(f'\nStart Parsing...\n')
 
 def process(i_url):
     sem_pars.acquire()
-    html_pages = list()
+    html_pages = list()   
     cur_url = i_url
     god_tg_name = False
     for itter in range(1, pars_dp+1):
@@ -174,6 +186,10 @@ for part in codes:
     part = re.sub('%250A', '', part)
     part = re.sub('%0D', '', part)
     part = requests.utils.unquote(requests.utils.unquote(part)).strip()
+    part = re.sub(' ', '', part)
+    part = re.sub('', '', part)
+    part = re.sub(r'\x00', '', part)    
+    part = re.sub(r'\x01', '', part)    
     part = re.sub('amp;', '', part)
     part = re.sub('�', '', part)
     part = re.sub('fp=firefox', 'fp=chrome', part)
@@ -273,8 +289,8 @@ for x in processed_codes:
     new_processed_codes.append(x.strip())
 processed_codes = list(set(new_processed_codes))
 
-#processed_codes = substring_del(processed_codes)
-#processed_codes = list(set(processed_codes))
+processed_codes = substring_del(processed_codes)
+processed_codes = list(set(processed_codes))
 processed_codes = sorted(processed_codes)
 
 print(f'\nDelete tg channels that not contains proxy configs...')
