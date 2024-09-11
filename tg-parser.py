@@ -154,7 +154,7 @@ def process(i_url):
         for code_tag in code_tags:
             code_content2 = str(code_tag).split('<br/>')
             for code_content in code_content2:
-                if "vless://" in code_content or "ss://" in code_content or "vmess://" in code_content or "trojan://" in code_content or "tuic://" in code_content or "hysteria://" in code_content or "hy2://" in code_content or "hysteria2://" in code_content or "juicity://" in code_content or "nekoray://" in code_content or "socks4://" in code_content or "socks5://" in code_content or "socks://" in code_content or "naive+" in code_content:
+                if "vless://" in code_content or "ss://" in code_content or "vmess://" in code_content or "trojan://" in code_content or "tuic://" in code_content or "hysteria://" in code_content or "hy2://" in code_content or "hysteria2://" in code_content or "juicity://" in code_content or "nekoray://" in code_content or "sn://" in code_content or "husi://" in code_content or "exclave://" in code_content or "ulink://" in code_content or "socks4://" in code_content or "socks5://" in code_content or "socks://" in code_content or "naive+" in code_content:
                     codes.append(re.sub(htmltag_pattern, '', code_content))
                     new_tg_name_json.append(i_url)
                     god_tg_name = True                    
@@ -207,11 +207,17 @@ for part in codes:
         continue
     elif "vless://" in part:
         part = f'vless://{part.split("vless://")[1]}'
+#In Vless flow=xtls-rprx-direct is old and not actualy
+        if "flow=xtls-rprx-direct" in part:
+#            part = re.sub('flow=xtls-rprx-direct', 'flow=xtls-rprx-vision', part)
+            continue                      
         if "@" in part and ":" in part[8:]:
             processed_codes.append(part.strip())
         continue
     elif "ss://" in part:
         part = f'ss://{part.split("ss://")[1]}'
+        if ';;' in part: 
+            part = re.sub(';;', ';', part)
         processed_codes.append(part.strip())
         continue
     elif "trojan://" in part:
@@ -247,6 +253,22 @@ for part in codes:
         part = f'nekoray://{part.split("nekoray://")[1]}'
         processed_codes.append(part.strip())
         continue
+    elif "sn://" in part:
+        part = f'sn://{part.split("sn://")[1]}'
+        processed_codes.append(part.strip())
+        continue        
+    elif "husi://" in part:
+        part = f'husi://{part.split("husi://")[1]}'
+        processed_codes.append(part.strip())
+        continue
+    elif "exclave://" in part:
+        part = f'exclave://{part.split("exclave://")[1]}'
+        processed_codes.append(part.strip())
+        continue
+    elif "ulink://" in part:
+        part = f'ulink://{part.split("ulink://")[1]}'
+        processed_codes.append(part.strip())
+        continue        
     elif "socks4://" in part:
         part = f'socks4://{part.split("socks4://")[1]}'
         if ":" in part[9:]:
