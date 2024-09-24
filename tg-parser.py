@@ -154,7 +154,7 @@ def process(i_url):
         for code_tag in code_tags:
             code_content2 = str(code_tag).split('<br/>')
             for code_content in code_content2:
-                if "vless://" in code_content or "ss://" in code_content or "vmess://" in code_content or "trojan://" in code_content or "tuic://" in code_content or "hysteria://" in code_content or "hy2://" in code_content or "hysteria2://" in code_content or "juicity://" in code_content or "nekoray://" in code_content or "sn://" in code_content or "husi://" in code_content or "exclave://" in code_content or "ulink://" in code_content or "socks4://" in code_content or "socks5://" in code_content or "socks://" in code_content or "naive+" in code_content:
+                if "vless://" in code_content or "ss://" in code_content or "vmess://" in code_content or "trojan://" in code_content or "tuic://" in code_content or "hysteria://" in code_content or "hy2://" in code_content or "hysteria2://" in code_content or "juicity://" in code_content or "nekoray://" in code_content or "sn://" in code_content or "husi://" in code_content or "exclave://" in code_content or "ulink://" in code_content or "socks4://" in code_content or "socks5://" in code_content or "socks://" in code_content or "naive+" in code_content or "wireguard://" in code_content or "wg://" in code_content:
                     codes.append(re.sub(htmltag_pattern, '', code_content))
                     new_tg_name_json.append(i_url)
                     god_tg_name = True                    
@@ -254,16 +254,28 @@ for part in codes:
         processed_codes.append(part.strip())
         continue
     elif "sn://" in part:
-        part = f'sn://{part.split("sn://")[1]}'
-        processed_codes.append(part.strip())
+        part0 = f'sn://{part.split("sn://")[1]}'
+        part1 = f'husi://{part.split("sn://")[1]}'
+        part2 = f'exclave://{part.split("sn://")[1]}'
+        processed_codes.append(part0.strip())
+        processed_codes.append(part1.strip())
+        processed_codes.append(part2.strip())        
         continue        
     elif "husi://" in part:
-        part = f'husi://{part.split("husi://")[1]}'
-        processed_codes.append(part.strip())
+        part1 = f'husi://{part.split("husi://")[1]}'
+        part0 = f'sn://{part.split("husi://")[1]}'
+        part2 = f'exclave://{part.split("husi://")[1]}'        
+        processed_codes.append(part0.strip())
+        processed_codes.append(part1.strip())
+        processed_codes.append(part2.strip())
         continue
     elif "exclave://" in part:
-        part = f'exclave://{part.split("exclave://")[1]}'
-        processed_codes.append(part.strip())
+        part2 = f'exclave://{part.split("exclave://")[1]}'
+        part0 = f'sn://{part.split("exclave://")[1]}'
+        part1 = f'husi://{part.split("exclave://")[1]}'
+        processed_codes.append(part0.strip())
+        processed_codes.append(part1.strip())
+        processed_codes.append(part2.strip())
         continue
     elif "ulink://" in part:
         part = f'ulink://{part.split("ulink://")[1]}'
@@ -289,6 +301,14 @@ for part in codes:
         if ":" in part[13:] and "@" in part:
             processed_codes.append(part.strip())
         continue
+    elif "wireguard://" in part:
+        part = f'wireguard://{part.split("wireguard://")[1]}'
+        processed_codes.append(part.strip())
+        continue
+    elif "wg://" in part:
+        part = f'wg://{part.split("wg://")[1]}'
+        processed_codes.append(part.strip())
+        continue           
 
 print(f'\nTrying to delete corrupted configurations...') 
 
