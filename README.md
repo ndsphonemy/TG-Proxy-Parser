@@ -1,5 +1,5 @@
 # TG-Proxy-Parser
- Python multithreading parser that parses Vmess, Vless, Reality, Trojan, ShadowSocks, Hysteria-1, Hysteria-2, Tuic, Juicity, Naive, Nekoray, Nekobox, Husi, Exclave, Karing and Socks(4-5) proxy configs from telegram channels.
+ Python multithreading parser that parses Vmess, Vless, Reality, Trojan, ShadowSocks, Hysteria-1, Hysteria-2, Tuic, Juicity, Naive, Nekoray, Nekobox, Husi, Exclave, Karing, Wireguard and Socks(4-5) proxy configs from telegram channels.
 
 ## Star History
 
